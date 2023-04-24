@@ -11,39 +11,34 @@ class Cuenta:
         if self.saldo >= cantidad:
             self.saldo -= cantidad
     
-def proceso_ingresar(cuenta, cantidad):
+def proceso_ingresar(cantidad):
     cuenta.ingresar(cantidad)
 
-def proceso_retirar(cuenta, cantidad):
+def proceso_retirar(cantidad):
     cuenta.retirar(cantidad)
 
 if __name__ == '__main__':
     cuenta = Cuenta(100)
-    procesos = []
-    
-    # Crear procesos para ingresos
-    for i in range(40):
-        procesos.append(multiprocessing.Process(target=proceso_ingresar, args=(cuenta, 100)))
-    for i in range(20):
-        procesos.append(multiprocessing.Process(target=proceso_ingresar, args=(cuenta, 50)))
-    for i in range(60):
-        procesos.append(multiprocessing.Process(target=proceso_ingresar, args=(cuenta, 20)))
-    
-    # Crear procesos para retiros
-    for i in range(40):
-        procesos.append(multiprocessing.Process(target=proceso_retirar, args=(cuenta, 100)))
-    for i in range(20):
-        procesos.append(multiprocessing.Process(target=proceso_retirar, args=(cuenta, 50)))
-    for i in range(60):
-        procesos.append(multiprocessing.Process(target=proceso_retirar, args=(cuenta, 20)))
-    
-    # Iniciar todos los procesos
-    for proceso in procesos:
-        proceso.start()
-    
-    # Esperar a que todos los procesos terminen
-    for proceso in procesos:
-        proceso.join()
+    with multiprocessing.Pool(processes=4) as pool:
+        # Crear procesos para ingresos
+        for i in range(40):
+            pool.apply_async(proceso_ingresar, args=(100,))
+        for i in range(20):
+            pool.apply_async(proceso_ingresar, args=(50,))
+        for i in range(60):
+            pool.apply_async(proceso_ingresar, args=(20,))
+        
+        # Crear procesos para retiros
+        for i in range(40):
+            pool.apply_async(proceso_retirar, args=(100,))
+        for i in range(20):
+            pool.apply_async(proceso_retirar, args=(50,))
+        for i in range(60):
+            pool.apply_async(proceso_retirar, args=(20,))
+        
+        # Esperar a que todos los procesos terminen
+        pool.close()
+        pool.join()
     
     # Comprobar el saldo final
     saldo_final = cuenta.saldo
